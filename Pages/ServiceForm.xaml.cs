@@ -52,7 +52,7 @@ namespace WpfBeauty.Pages
             {
                 TBID.Text = _service.ID.ToString();
                 TBTitle.Text = _service.Title;
-                TBCost.Text = $"{_service.Cost:N2}"; // 2 знака после запятой
+                TBCost.Text = decimal.Truncate(_service.Cost).ToString();
                 TBTime.Text = _service.DurationInSeconds.ToString(); // вывод в секундах
                 TBDescription.Text = _service.Description;
                 TBDiscount.Text = $"{_service.Discount * 100}";
@@ -64,7 +64,7 @@ namespace WpfBeauty.Pages
                     try
                     {
                         string imagePath = System.IO.Path.Combine(_service.MainImagePath);
-                        PhotoMainPreview.Source = new BitmapImage(new Uri(imagePath));
+                        PhotoMainPreview.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
                         newMainPhotoPath = imagePath;
                     }
                     catch (UriFormatException ex)
@@ -73,9 +73,9 @@ namespace WpfBeauty.Pages
                     }
                 }
             }
-            catch (UriFormatException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Ошибка в пути к изображению: " + ex.Message);
+                MessageBox.Show("Ошибка: " + ex.Message);
             }
 
         }
@@ -202,7 +202,7 @@ namespace WpfBeauty.Pages
         private bool ValidateInput(string title, string duration, string cost, string discount)
         {
             // Проверка уникальности названия услуги
-            if (IsServiceNameUnique(title))
+            if (IsServiceNameUnique(title) && _service == null)
             {
                 MessageBox.Show("Услуга с таким названием уже существует.", "Ошибка");
                 return false;
@@ -218,7 +218,7 @@ namespace WpfBeauty.Pages
             // Проверка стоимости
             if (!decimal.TryParse(cost, out decimal costValue) || costValue < 0 || !IsValidCostFormat(cost))
             {
-                MessageBox.Show("Стоимость должна быть положительным числом и соответствовать формату 1000,00.", "Ошибка");
+                MessageBox.Show("Стоимость должна быть положительным числом и соответствовать формату 1 000.", "Ошибка");
                 return false;
             }
 
@@ -240,7 +240,8 @@ namespace WpfBeauty.Pages
         private bool IsValidCostFormat(string cost)
         {
             // Проверка формата стоимости
-            return Regex.IsMatch(cost, @"^\d+(\,\d{2})?$");
+            // return Regex.IsMatch(cost, @"^\d+(\,\d{0})?$");
+            return Regex.IsMatch(cost, @"^\d+$");
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
